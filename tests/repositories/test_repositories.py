@@ -1,5 +1,6 @@
-from datetime import timezone
+from datetime import datetime, timezone
 
+import pytest
 from alembic import command
 from alembic.config import Config
 from sqlalchemy import create_engine, inspect, select
@@ -119,6 +120,26 @@ def test_evidence_repository_normalizes_iso_timestamp_strings_to_persisted_utc()
     assert stored.data_timestamp_utc.tzinfo == timezone.utc
     assert stored.data_timestamp_utc.hour == 1
     assert stored.data_timestamp_utc.minute == 30
+
+
+def test_evidence_repository_rejects_naive_timestamps():
+    session = make_session()
+    repo = EvidenceRepository(session)
+
+    common_kwargs = {
+        "symbol": "600519",
+        "target_type": "stock",
+        "evidence_type": "market_snapshot",
+        "source": "akshare",
+        "source_url": "https://akshare.akfamily.xyz/",
+        "payload": {"last_price": 1500.5},
+    }
+
+    with pytest.raises(ValueError, match="timezone-aware"):
+        repo.create(**common_kwargs, data_timestamp=datetime(2026, 6, 27, 9, 30))
+
+    with pytest.raises(ValueError, match="timezone-aware"):
+        repo.create(**common_kwargs, data_timestamp="2026-06-27T09:30:00")
 
 
 def test_database_helpers_cache_engines_and_sessionmakers():

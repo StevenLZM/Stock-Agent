@@ -45,5 +45,5 @@ def _normalize_datetime(value: datetime | str | None) -> datetime | None:
         return None
     parsed = value if isinstance(value, datetime) else datetime.fromisoformat(value.replace("Z", "+00:00"))
     if parsed.tzinfo is None:
-        return parsed
+        raise ValueError("data_timestamp must be timezone-aware")
     return parsed.astimezone(timezone.utc).replace(tzinfo=None)
