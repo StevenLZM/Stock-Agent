@@ -1,1 +1,9 @@
+.env
+.pytest_cache/
+__pycache__/
+*.py[cod]
+stock_agent.db
+*.sqlite
+*.sqlite3
+.DS_Store
 .worktrees/
