@@ -22,18 +22,30 @@ def test_target_create_rejects_non_six_digit_symbol():
 
 
 def test_market_snapshot_requires_source_and_price():
-    snapshot = MarketSnapshot(
-        symbol="600519",
-        name="贵州茅台",
-        market="CN",
-        target_type="stock",
-        last_price=1500.5,
-        change_percent=1.2,
-        volume=123456,
-        amount=987654321.0,
-        data_timestamp="2026-06-27T09:30:00+08:00",
-        source="akshare",
-        source_url="https://akshare.akfamily.xyz/",
-        raw_payload={"代码": "600519"},
-    )
+    snapshot_data = {
+        "symbol": "600519",
+        "name": "贵州茅台",
+        "market": "CN",
+        "target_type": "stock",
+        "last_price": 1500.5,
+        "change_percent": 1.2,
+        "volume": 123456,
+        "amount": 987654321.0,
+        "data_timestamp": "2026-06-27T09:30:00+08:00",
+        "source": "akshare",
+        "source_url": "https://akshare.akfamily.xyz/",
+        "raw_payload": {"代码": "600519"},
+    }
+
+    snapshot = MarketSnapshot(**snapshot_data)
     assert snapshot.last_price == 1500.5
+
+    missing_source = snapshot_data.copy()
+    missing_source.pop("source")
+    with pytest.raises(ValidationError):
+        MarketSnapshot(**missing_source)
+
+    missing_last_price = snapshot_data.copy()
+    missing_last_price.pop("last_price")
+    with pytest.raises(ValidationError):
+        MarketSnapshot(**missing_last_price)
