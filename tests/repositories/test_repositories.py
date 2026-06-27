@@ -1,11 +1,12 @@
+from datetime import timezone
+
 from alembic import command
 from alembic.config import Config
-from sqlalchemy import inspect
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect, select
 from sqlalchemy.orm import sessionmaker
 
 from stock_agent.app.core.database import engine_from_url, sessionmaker_for_url
-from stock_agent.app.models.tables import Base
+from stock_agent.app.models.tables import Base, EvidenceItem
 from stock_agent.app.repositories.evidence import EvidenceRepository
 from stock_agent.app.repositories.push_records import PushRecordRepository
 from stock_agent.app.repositories.settings import SettingsRepository
@@ -96,7 +97,7 @@ def test_repositories_do_not_commit_so_services_control_transactions():
     assert push_records.list_recent(limit=10) == []
 
 
-def test_evidence_repository_normalizes_iso_timestamp_strings():
+def test_evidence_repository_normalizes_iso_timestamp_strings_to_persisted_utc():
     session = make_session()
     evidence = EvidenceRepository(session).create(
         symbol="600519",
@@ -107,8 +108,17 @@ def test_evidence_repository_normalizes_iso_timestamp_strings():
         payload={"last_price": 1500.5},
         data_timestamp="2026-06-27T09:30:00+08:00",
     )
-    assert evidence.data_timestamp is not None
-    assert evidence.data_timestamp.year == 2026
+
+    evidence_id = evidence.id
+
+    session.commit()
+    session.expunge_all()
+
+    stored = session.scalars(select(EvidenceItem).where(EvidenceItem.id == evidence_id)).one()
+    assert stored.data_timestamp_utc is not None
+    assert stored.data_timestamp_utc.tzinfo == timezone.utc
+    assert stored.data_timestamp_utc.hour == 1
+    assert stored.data_timestamp_utc.minute == 30
 
 
 def test_database_helpers_cache_engines_and_sessionmakers():
@@ -131,4 +141,4 @@ def test_alembic_initial_migration_upgrade_and_downgrade(tmp_path, monkeypatch):
     command.downgrade(config, "base")
 
     tables_after_downgrade = set(inspect(engine).get_table_names())
-    assert "watch_targets" not in tables_after_downgrade
+    assert {"watch_targets", "app_settings", "evidence_items", "push_records"}.isdisjoint(tables_after_downgrade)

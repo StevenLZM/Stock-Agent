@@ -67,6 +67,14 @@ class EvidenceItem(Base):
     def payload(self) -> dict[str, Any]:
         return json.loads(self.payload_json)
 
+    @property
+    def data_timestamp_utc(self) -> datetime | None:
+        if self.data_timestamp is None:
+            return None
+        if self.data_timestamp.tzinfo is None:
+            return self.data_timestamp.replace(tzinfo=timezone.utc)
+        return self.data_timestamp.astimezone(timezone.utc)
+
 
 class PushRecord(Base):
     __tablename__ = "push_records"
