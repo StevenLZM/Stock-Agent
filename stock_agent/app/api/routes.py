@@ -1,4 +1,5 @@
 from pathlib import Path
+from uuid import uuid4
 
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse
@@ -7,11 +8,16 @@ from sqlalchemy.orm import Session
 
 from stock_agent.app.core.config import Settings
 from stock_agent.app.core.database import get_session
+from stock_agent.app.core.redaction import redact_secret
 from stock_agent.app.models.tables import Base
+from stock_agent.app.providers.akshare_market_data import AKShareMarketDataProvider
+from stock_agent.app.providers.deepseek_llm import DeepSeekLLMProvider
+from stock_agent.app.providers.server_chan import ServerChanProvider
 from stock_agent.app.repositories.evidence import EvidenceRepository
 from stock_agent.app.repositories.push_records import PushRecordRepository
 from stock_agent.app.repositories.settings import SettingsRepository
 from stock_agent.app.repositories.watch_targets import WatchTargetRepository
+from stock_agent.app.services.reports import MorningReportService
 
 
 router = APIRouter()
@@ -28,6 +34,56 @@ def ensure_tables(session: Session) -> None:
 
 def session_dependency():
     yield from get_session()
+
+
+def build_morning_report_service(session: Session, settings: Settings) -> MorningReportService:
+    settings_repository = SettingsRepository(session)
+    pro_model = _stored_setting_value(settings_repository, "deepseek_pro_model", settings.deepseek_pro_model)
+    flash_model = _stored_setting_value(settings_repository, "deepseek_flash_model", settings.deepseek_flash_model)
+    push_provider = ServerChanProvider(settings.server_chan_send_key) if settings.server_chan_send_key else None
+    return MorningReportService(
+        session=session,
+        targets=WatchTargetRepository(session),
+        evidence=EvidenceRepository(session),
+        push_records=PushRecordRepository(session),
+        market_provider=AKShareMarketDataProvider(),
+        llm=DeepSeekLLMProvider(
+            api_key=settings.deepseek_api_key,
+            base_url=settings.deepseek_base_url,
+            pro_model=pro_model,
+            flash_model=flash_model,
+        ),
+        push_provider=push_provider,
+    )
+
+
+def _stored_setting_value(repository: SettingsRepository, key: str, default: str) -> str:
+    setting = repository.get(key)
+    if setting is None or setting.value in {None, ""}:
+        return default
+    return str(setting.value)
+
+
+def _record_manual_run_error(session: Session, settings: Settings, status: str, error_message: str) -> None:
+    safe_error = _redact_configured_secrets(error_message, settings)
+    PushRecordRepository(session).create(
+        push_id=f"push_{uuid4().hex}",
+        title="关注标的早报",
+        content=safe_error,
+        channel="server_chan",
+        status=status,
+        evidence_ids=[],
+        error_message=safe_error,
+    )
+    session.commit()
+
+
+def _redact_configured_secrets(message: str, settings: Settings) -> str:
+    safe_message = message
+    for secret in (settings.deepseek_api_key, settings.server_chan_send_key):
+        if secret:
+            safe_message = safe_message.replace(secret, redact_secret(secret))
+    return safe_message
 
 
 @router.get("/")
@@ -103,7 +159,16 @@ def test_server_chan():
 
 
 @router.post("/reports/morning/run")
-def run_morning_report():
+def run_morning_report(session: Session = Depends(session_dependency), settings: Settings = Depends(get_settings)):
+    ensure_tables(session)
+    try:
+        build_morning_report_service(session, settings).run()
+    except ValueError as exc:
+        session.rollback()
+        _record_manual_run_error(session, settings, "skipped", str(exc))
+    except Exception as exc:
+        session.rollback()
+        _record_manual_run_error(session, settings, "failed", str(exc))
     return RedirectResponse("/push-records", status_code=303)
 
 
