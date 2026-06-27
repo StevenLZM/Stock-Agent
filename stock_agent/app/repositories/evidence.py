@@ -20,7 +20,7 @@ class EvidenceRepository:
         source: str,
         source_url: str,
         payload: dict[str, Any],
-        data_timestamp: datetime | None = None,
+        data_timestamp: datetime | str | None = None,
     ) -> EvidenceItem:
         evidence = EvidenceItem(
             symbol=symbol,
@@ -28,14 +28,19 @@ class EvidenceRepository:
             evidence_type=evidence_type,
             source=source,
             source_url=source_url,
-            data_timestamp=data_timestamp,
+            data_timestamp=_normalize_datetime(data_timestamp),
             payload_json=json.dumps(payload, ensure_ascii=False),
         )
         self.session.add(evidence)
-        self.session.commit()
-        self.session.refresh(evidence)
+        self.session.flush()
         return evidence
 
     def list_recent(self, limit: int) -> list[EvidenceItem]:
         statement = select(EvidenceItem).order_by(EvidenceItem.created_at.desc(), EvidenceItem.id.desc()).limit(limit)
         return list(self.session.scalars(statement).all())
+
+
+def _normalize_datetime(value: datetime | str | None) -> datetime | None:
+    if value is None or isinstance(value, datetime):
+        return value
+    return datetime.fromisoformat(value.replace("Z", "+00:00"))

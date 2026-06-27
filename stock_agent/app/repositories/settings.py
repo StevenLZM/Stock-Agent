@@ -19,8 +19,7 @@ class SettingsRepository:
         else:
             setting.value_json = value_json
             setting.is_secret = is_secret
-        self.session.commit()
-        self.session.refresh(setting)
+        self.session.flush()
         return setting
 
     def get(self, key: str) -> AppSetting | None:

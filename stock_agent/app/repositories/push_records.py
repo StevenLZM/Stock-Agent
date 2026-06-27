@@ -33,8 +33,7 @@ class PushRecordRepository:
             sent_at=sent_at,
         )
         self.session.add(record)
-        self.session.commit()
-        self.session.refresh(record)
+        self.session.flush()
         return record
 
     def list_recent(self, limit: int) -> list[PushRecord]:

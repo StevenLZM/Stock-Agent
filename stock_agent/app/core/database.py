@@ -1,4 +1,5 @@
 from collections.abc import Generator
+from functools import lru_cache
 
 from sqlalchemy import Engine, create_engine
 from sqlalchemy.orm import Session, sessionmaker
@@ -6,11 +7,13 @@ from sqlalchemy.orm import Session, sessionmaker
 from stock_agent.app.core.config import Settings
 
 
+@lru_cache(maxsize=None)
 def engine_from_url(database_url: str) -> Engine:
     connect_args = {"check_same_thread": False} if database_url.startswith("sqlite") else {}
     return create_engine(database_url, connect_args=connect_args)
 
 
+@lru_cache(maxsize=None)
 def sessionmaker_for_url(database_url: str) -> sessionmaker[Session]:
     return sessionmaker(bind=engine_from_url(database_url), autoflush=False, autocommit=False)
 

@@ -26,8 +26,7 @@ class WatchTargetRepository:
             cooldown_minutes=cooldown_minutes,
         )
         self.session.add(target)
-        self.session.commit()
-        self.session.refresh(target)
+        self.session.flush()
         return target
 
     def list_enabled(self) -> list[WatchTarget]:
@@ -39,4 +38,4 @@ class WatchTargetRepository:
         if target is None:
             return
         self.session.delete(target)
-        self.session.commit()
+        self.session.flush()

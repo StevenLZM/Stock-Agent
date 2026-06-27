@@ -2,7 +2,7 @@ import json
 from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import Boolean, DateTime, Float, Index, Integer, String, Text, UniqueConstraint
+from sqlalchemy import Boolean, DateTime, Index, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -72,7 +72,6 @@ class PushRecord(Base):
     __tablename__ = "push_records"
     __table_args__ = (
         UniqueConstraint("push_id", name="uq_push_records_push_id"),
-        Index("ix_push_records_push_id", "push_id"),
         Index("ix_push_records_created_at", "created_at"),
     )
 
