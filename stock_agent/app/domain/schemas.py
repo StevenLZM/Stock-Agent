@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field, field_validator
 
 
 TargetType = Literal["stock", "index"]
-PushStatus = Literal["sent", "skipped", "failed", "degraded"]
+PushStatus = Literal["sent", "skipped", "failed"]
 
 
 class TargetCreate(BaseModel):

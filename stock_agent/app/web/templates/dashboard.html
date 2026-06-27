@@ -3,6 +3,9 @@
 <section>
   <h2>关注标的</h2>
   <p>{{ targets|length }} 个启用标的</p>
+  <form method="post" action="/reports/morning/run">
+    <button type="submit">立即推送早报</button>
+  </form>
 </section>
 <section>
   <h2>最近推送</h2>

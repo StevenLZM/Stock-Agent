@@ -77,6 +77,25 @@ def test_deepseek_provider_rejects_non_json_model_content():
         provider.generate_morning_report([])
 
 
+def test_deepseek_provider_normalizes_missing_report_fields():
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"choices": [{"message": {"content": '{"summary":"只有摘要","extra_number":123}'}}]})
+
+    provider = DeepSeekLLMProvider(
+        api_key="sk-test",
+        client=httpx.Client(transport=httpx.MockTransport(handler)),
+    )
+
+    report = provider.generate_morning_report([])
+
+    assert report.title == "关注标的早报"
+    assert report.summary == "只有摘要"
+    assert report.key_points == []
+    assert report.evidence_refs == []
+    assert report.watch_items == []
+    assert report.risk_note == ""
+
+
 def test_deepseek_provider_requires_api_key():
     with pytest.raises(ValueError, match="DEEPSEEK_API_KEY"):
         DeepSeekLLMProvider(api_key="")

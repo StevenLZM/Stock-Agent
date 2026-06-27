@@ -25,12 +25,6 @@ def test_guardrail_requires_risk_note():
     assert "missing_risk_note" in result.reasons
 
 
-def test_guardrail_accepts_evidence_backed_numbers():
-    result = Guardrail().validate(make_report("最新价 1500.5，涨跌幅 1.2%"), allowed_numbers={"1500.5", "1.2"})
+def test_guardrail_ignores_numeric_whitelist():
+    result = Guardrail().validate(make_report("最新价 1500.5，涨跌幅 9.9%"))
     assert result.passed is True
-
-
-def test_guardrail_rejects_unsupported_numeric_claims():
-    result = Guardrail().validate(make_report("最新价 1500.5，涨跌幅 9.9%"), allowed_numbers={"1500.5"})
-    assert result.passed is False
-    assert "unsupported_numeric_claim" in result.reasons

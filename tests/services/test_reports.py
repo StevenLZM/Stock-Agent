@@ -107,7 +107,7 @@ def test_morning_report_service_skips_push_when_provider_missing():
     assert record.error_message == "SERVER_CHAN_SEND_KEY is not configured"
 
 
-def test_morning_report_service_degrades_unsafe_llm_content():
+def test_morning_report_service_sends_llm_content_without_guardrail_degrade():
     session = make_session()
     WatchTargetRepository(session).create("600519", "贵州茅台", "stock")
     session.commit()
@@ -121,5 +121,5 @@ def test_morning_report_service_degrades_unsafe_llm_content():
         push_provider=FakePushProvider(),
     )
     record = service.run()
-    assert record.status == "degraded"
-    assert "建议买入" not in record.content
+    assert record.status == "sent"
+    assert "建议买入" in record.content

@@ -14,6 +14,14 @@ def test_dashboard_loads():
     assert "Stock Agent" in response.text
 
 
+def test_dashboard_has_manual_push_button():
+    response = client.get("/")
+    assert response.status_code == 200
+    assert 'action="/reports/morning/run"' in response.text
+    assert 'method="post"' in response.text
+    assert "立即推送早报" in response.text
+
+
 def test_create_target_from_form():
     response = client.post(
         "/targets",
