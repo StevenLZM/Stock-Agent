@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<section>
+  <h2>关注标的</h2>
+  <p>{{ targets|length }} 个启用标的</p>
+</section>
+<section>
+  <h2>最近推送</h2>
+  <table>
+    <tr><th>标题</th><th>状态</th><th>渠道</th></tr>
+    {% for push in pushes %}
+    <tr><td>{{ push.title }}</td><td>{{ push.status }}</td><td>{{ push.channel }}</td></tr>
+    {% else %}
+    <tr><td colspan="3">暂无推送记录</td></tr>
+    {% endfor %}
+  </table>
+</section>
+{% endblock %}

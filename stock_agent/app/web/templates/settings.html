@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<section>
+  <h2>设置</h2>
+  <form method="post" action="/settings">
+    <label>DeepSeek Pro Model <input name="deepseek_pro_model" value="{{ deepseek_pro_model }}"></label>
+    <label>DeepSeek Flash Model <input name="deepseek_flash_model" value="{{ deepseek_flash_model }}"></label>
+    <button type="submit">保存</button>
+  </form>
+</section>
+{% endblock %}

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Stock Agent</title>
+    <style>
+      body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; background: #f7f7f5; color: #222; }
+      header { background: #17324d; color: white; padding: 16px 24px; }
+      nav a { color: white; margin-right: 16px; text-decoration: none; }
+      main { max-width: 1080px; margin: 24px auto; padding: 0 20px; }
+      table { width: 100%; border-collapse: collapse; background: white; }
+      th, td { border-bottom: 1px solid #ddd; padding: 10px; text-align: left; }
+      input, select, button { padding: 8px; margin: 4px 6px 4px 0; }
+      section { margin-bottom: 28px; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Stock Agent</h1>
+      <nav>
+        <a href="/">Dashboard</a>
+        <a href="/targets">Targets</a>
+        <a href="/settings">Settings</a>
+        <a href="/push-records">Push Records</a>
+      </nav>
+    </header>
+    <main>{% block content %}{% endblock %}</main>
+  </body>
+</html>

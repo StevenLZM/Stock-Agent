@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+{% if record %}
+<article>
+  <h2>{{ record.title }}</h2>
+  <p>状态：{{ record.status }}</p>
+  <pre>{{ record.content }}</pre>
+</article>
+{% else %}
+<p>未找到推送记录</p>
+{% endif %}
+{% endblock %}

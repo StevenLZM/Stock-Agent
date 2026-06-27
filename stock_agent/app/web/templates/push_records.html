@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<section>
+  <h2>推送历史</h2>
+  <table>
+    <tr><th>标题</th><th>状态</th><th>渠道</th></tr>
+    {% for record in records %}
+    <tr><td><a href="/push-records/{{ record.push_id }}">{{ record.title }}</a></td><td>{{ record.status }}</td><td>{{ record.channel }}</td></tr>
+    {% else %}
+    <tr><td colspan="3">暂无推送记录</td></tr>
+    {% endfor %}
+  </table>
+</section>
+{% endblock %}

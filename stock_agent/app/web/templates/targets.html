@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<section>
+  <h2>添加标的</h2>
+  <form method="post" action="/targets">
+    <input name="symbol" placeholder="600519" required>
+    <input name="name" placeholder="贵州茅台" required>
+    <select name="target_type">
+      <option value="stock">股票</option>
+      <option value="index">指数</option>
+    </select>
+    <button type="submit">添加</button>
+  </form>
+</section>
+<section>
+  <h2>已启用标的</h2>
+  <table>
+    <tr><th>代码</th><th>名称</th><th>类型</th><th></th></tr>
+    {% for target in targets %}
+    <tr>
+      <td>{{ target.symbol }}</td>
+      <td>{{ target.name }}</td>
+      <td>{{ target.target_type }}</td>
+      <td><form method="post" action="/targets/{{ target.id }}/delete"><button type="submit">删除</button></form></td>
+    </tr>
+    {% else %}
+    <tr><td colspan="4">暂无标的</td></tr>
+    {% endfor %}
+  </table>
+</section>
+{% endblock %}
